@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart of Gold Medical International | Healing & Hope</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary-gold: #D4AF37;
+            --primary-blue: #005f73;
+            --secondary-blue: #0a9396;
+            --light-bg: #f4f7f6;
+            --text-dark: #333;
+            --text-light: #fff;
+            --bg-color: #fff;
+            --text-color: #333;
+            --card-bg: #fff;
+            --border-color: #eee;
+            --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        [data-theme="dark"] {
+            --primary-blue: #0a9396;
+            --secondary-blue: #005f73;
+            --light-bg: #2a2a2a;
+            --text-dark: #f4f7f6;
+            --text-light: #fff;
+            --bg-color: #1a1a1a;
+            --text-color: #f4f7f6;
+            --card-bg: #2a2a2a;
+            --border-color: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- NAVIGATION --- */
+        header {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            font-family: 'Georgia', serif;
+        }
+
+        .logo span { color: var(--primary-gold); margin-left: 5px; }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            transition: color 0.3s;
+            font-family: 'Georgia', serif;
+        }
+
+        .nav-links a:hover { color: var(--primary-gold); }
+
+        .btn-donate {
+            background-color: var(--primary-gold);
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-donate:hover { background-color: #b5952f; }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-blue);
+            margin-left: 1rem;
+            transition: color 0.3s;
+        }
+
+        .theme-toggle:hover { color: var(--primary-gold); }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-blue);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mobile-menu.open { display: flex; }
+
+        .mobile-menu a {
+            display: block;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .mobile-menu .btn-donate {
+            text-align: center;
+            font-size: 0.9rem;
+            padding: 0.3rem 1rem;
+            margin-top: 0.5rem;
+            border: none;
+            border-bottom: none;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            background: linear-gradient(rgba(0, 95, 115, 0.8), rgba(0, 95, 115, 0.8)), url('chatgpt image feb 27, 2026, 03_08_54 am.png') no-repeat;
+            background-size: cover;
+            background-position: center;
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            padding: 0 1rem;
+            margin-top: 60px;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+        }
+
+        /* --- SECTIONS GENERAL --- */
+        section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary-gold);
+            margin: 10px auto 0;
+        }
+
+        /* --- ABOUT --- */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text p { margin-bottom: 1.5rem; }
+
+        .about-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .about-image img:hover {
+            transform: scale(0.95);
+        }
+
+        /* lists and call-to-action styling */
+        .impact-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            list-style: none;
+            padding: 0;
+        }
+
+        .impact-list li {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+
+        .impact-list li:hover {
+            transform: translateY(-3px);
+        }
+
+        #impact h3 {
+            text-align: center;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* --- FOUNDER --- */
+        .founder-section {
+            background-color: var(--light-bg);
+            width: 100%;
+            max-width: 100%; /* Full width background */
+        }
+        
+        .founder-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .founder-image img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .founder-image img:hover {
+            transform: scale(0.95);
+        }
+
+        .founder-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quote {
+            font-style: italic;
+            border-left: 5px solid var(--primary-gold);
+            padding-left: 1rem;
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+            margin: 1rem 0;
+        }
+
+        /* --- FOCUS (EPILEPSY) --- */
+        .focus-section {
+            background-color: var(--primary-blue);
+            color: #fff;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .focus-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .focus-section .section-title { color: #fff; }
+        .focus-section .section-title::after { background-color: #fff; }
+
+        .focus-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .focus-card {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .focus-card:hover {
+            transform: scale(0.95);
+        }
+
+        .focus-card h3 {
+            color: var(--primary-gold);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* --- JOURNEY --- */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .timeline-item {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .year {
+            font-weight: bold;
+            color: var(--primary-gold);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .video-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .video-item video {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .video-item p {
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 500;
+            color: var(--primary-blue);
+        }
+
+        .gallery-title {
+            text-align: center;
+            margin: 2rem 0 1rem;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+        }
+
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+        }
+        .slide {
+            display: none;
+        }
+        .slide img {
+            width: 100%;
+            border-radius: 15px;
+            height: 450px;
+            object-fit: cover;
+        }
+        .fade {
+            animation: fadeEffect 1s;
+        }
+        @keyframes fadeEffect {
+            from {opacity: 0.4;}
+            to {opacity: 1;}
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: #1a1a1a;
+            color: #fff;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--primary-gold);
+        }
+
+        .footer-section p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+
+        .footer-section a {
+            display: block;
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary-gold);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links a {
+            font-size: 1.3rem;
+            display: inline-flex;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212, 175, 55, 0.2);
+            border-radius: 50%;
+            transition: background 0.3s;
+            margin-bottom: 0;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-gold);
+            color: #fff;
+        }
+
+        .contact-info {
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        .contact-info p {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            padding-top: 2rem;
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .footer-bottom p {
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        video {
+            transition: transform 0.3s ease;
+        }
+
+        video:hover {
+            transform: scale(0.95);
+        }
+        #mission-map {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            margin-top: 2rem;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .btn-donate { display: none; }
+            .hamburger { display: block; }
+            .hero-content h1 { font-size: 2.5rem; }
+            .about-grid, .focus-grid, .founder-container { grid-template-columns: 1fr; }
+            .video-gallery { grid-template-columns: 1fr; }
+        }
+        #mission-map {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            margin-top: 2rem;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <div class="logo"><img src="ChatGPT Image Feb 27, 2026, 03_08_54 AM.png" alt="Heart of Gold Medical International logo featuring gold and blue colors, representing healing and hope in medical care" style="height: 40px; margin-right: 10px;">Heart of Gold <span>Medical</span></div>
+            <nav class="nav-links">
+                <a href="#about">About Us</a>
+                <a href="#founder">Our Founder</a>
+                <a href="#focus">Epilepsy Care</a>
+                <a href="#journey">Our Journey</a>
+                <a href="#impact">Our Impact</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <a href="#" class="btn-donate">Donate Now</a>
+            <button class="hamburger" onclick="toggleMenu()">☰</button>
+            <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="#about">About Us</a>
+            <a href="#founder">Our Founder</a>
+            <a href="#focus">Epilepsy Care</a>
+            <a href="#journey">Our Journey</a>
+            <a href="#impact">Our Impact</a>
+            <a href="#contact">Contact</a>
+            <a href="#" class="btn-donate">Donate Now</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Healing Bodies, Sharing Hope</h1>
+            <p>Providing health education, essential medications, and medical care to underserved individuals in remote African villages.</p>
+            <a href="#about" class="btn-donate" style="background-color: #fff; color: var(--primary-blue);">Learn More</a>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about">
+        <h2 class="section-title">Who We Are</h2>
+        <div class="about-grid">
+            <div class="about-text">
+        <p><strong>Heart of Gold Medical International (HOGMI)</strong> is a registered 501(c)(3) nonprofit organization dedicated to bringing health education, essential medications, and medical care to underserved communities in remote African villages. Our mission is simple: to bring healing, knowledge, and hope to those who would otherwise have little access to medical care.</p>
+                <p>Through our medical outreach programs, we provide free medical screenings and diagnostics, administer medications through trained medical professionals, and distribute health education materials that help communities understand and manage preventable illnesses.</p>
+            </div>
+            <div class="about-image">
+                <!-- Video for medical mission -->
+                <video autoplay muted loop style="width: 100%; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: transform 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='scale(0.95)'" onmouseout="this.style.transform='scale(1)'">
+                    <source src="0315.mov" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problem" style="background-color: var(--light-bg);">
+        <h2 class="section-title">The Problem</h2>
+        <ul class="problem-list">
+            <li>Many rural communities lack access to medical care.</li>
+            <li>Conditions like epilepsy are misunderstood and heavily stigmatized.</li>
+            <li>Without health education or treatment, many patients suffer unnecessary disability and early death.</li>
+        </ul>
+    </section>
+
+    <!-- What We Do Section -->
+    <section id="what-we-do">
+        <h2 class="section-title">What We Do</h2>
+        <ul class="services-list">
+            <li>Free medical screenings and diagnostics</li>
+            <li>Distribution of essential medications</li>
+            <li>Epilepsy treatment and monitoring</li>
+            <li>Quarterly evaluation and medication refills for diabetics and hypertensives</li>
+            <li>Community health education</li>
+            <li>Financial support since the COVID-19 pandemic</li>
+            <li>Food distribution to vulnerable individuals in Ezinnachi</li>
+            <li>Provision of reading glasses</li>
+        </ul>
+    </section>
+
+    <!-- Founder Section -->
+    <div class="founder-section">
+        <section id="founder">
+            <h2 class="section-title">Our Founder</h2>
+            <div class="founder-container">
+                <div class="founder-content">
+                    <h3>Chidi Nwaohia</h3>
+                    <p>Heart of Gold Medical International was founded by Chidi Nwaohia, who was born and raised in Ezinnachi Okigwe Imo State Nigeria, where she started this mission before going to other remote villages in African countries.</p>
+                    <p>By the divine grace of God, Chidi practiced as a registered nurse for over 29 years in both Nigeria and the United States. Through her years of service, she recognized a powerful truth: many lives could be transformed if only access to medications and basic health education were made available.</p>
+                    <p>As the sole survivor of ten siblings, Chidi has never forgotten what God brought her through. She believes deeply that her life was spared for a purpose. She knows that, <em>"To whom much is given, much is expected."</em></p>
+                    <div class="quote">
+                        "Love is not just a feeling—it is action. Love is intentional."
+                    </div>
+                </div>
+                <div class="founder-image">
+                    <img src="IMG_8450.jpg" alt="Chidi Nwaohia, Founder of Heart of Gold Medical International">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Focus Section -->
+    <div class="focus-section">
+        <section id="focus">
+            <h2 class="section-title">Our Focus: Epilepsy Care</h2>
+            <div class="focus-container">
+                <div class="focus-grid">
+                    <div class="focus-card">
+                        <h3>The Challenge</h3>
+                        <p>In many rural African communities, epilepsy is deeply misunderstood. Because some believe the condition is contagious or spiritual, those living with epilepsy are often isolated, rejected, stigmatized and isolated even by their own parents.</p>
+                        <p>Children are sent out of school as soon as their disease condition is known. Since Chidi started to go to schools and communities educating them that epilepsy is neither contagious nor evil spirits, these kids are now allowed in the schools. Tragically, most of the kids living with epilepsy in these communities do not survive beyond their teens. We have lost many of our patients due to drowning in the streams or falling into fire during seizures, or sheer neglects.</p>
+                    </div>
+                    <div class="focus-card">
+                        <h3>The Solution</h3>
+                        <p>Yet epilepsy is a treatable medical condition. With proper medication and consistent care, individuals can live normal and productive lives.</p>
+                        <p>Without knowledge and medical resources, however, many communities remain unable to manage epilepsy and other chronic conditions.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Journey Section -->
+    <section id="journey">
+        <h2 class="section-title">Our Journey</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="year">2006 & 2008</div>
+                <p>Chidi began personally sponsoring medical mission trips, serving in the Bangui, Central African Republic with a Christian organization.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="year">2013 & 2015</div>
+                <p>In 2013 and 2015, she undertook additional solo mission trips focused specifically on epilepsy and other chronic ailments in Ezinnachi. With the support of volunteers, physicians, and other medical professionals, and local leaders, life-saving medications and medical care were delivered to many in need.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="year">October 2016</div>
+                <p>The United States Internal Revenue Service officially granted Heart of Gold Medical International 501(c)(3) nonprofit status.</p>
+            </div>
+        </div>
+
+        <h3 class="gallery-title">Photo from Missions</h3>
+        <div class="slideshow-container">
+            <div class="slide fade">
+                <img src="PHOTO-2025-06-21-02-55-37 (1).jpg" alt="Medical outreaches">
+            </div>
+            <div class="slide fade">
+                <img src="CAR picture .jpg" alt="Patients receiving care">
+            </div>
+            <div class="slide fade">
+                <img src="IMG_4850.JPG" alt="Volunteers providing health education">
+            </div>
+            <div class="slide fade">
+                <img src="WhatsApp Image 2026-03-15 at 18.04.38.jpeg" alt="Community gatherings">
+            </div>
+            <div class="slide fade">
+                <img src="WhatsApp Image 2026-03-15 at 18.04.19.jpeg" alt="Food distribution">
+            </div>
+        </div>
+    </section>
+
+  <!-- Impact Section -->
+    <section id="impact">
+        <h2 class="section-title">Our Impact</h2>
+        <p>Through the dedication of volunteers and the generosity of donors, Heart of Gold Medical International continues to bring hope and medical care to underserved communities.</p>
+        <h3>EZINNACHI in 2025</h3>
+        <ul class="impact-list">
+            <li>Number of villages served in Ezinnachi: <strong>19</strong></li>
+            <li>Number of patients treated: <strong>554</strong></li>
+            <li>Number of medical outreaches: <strong>3</strong></li>
+            <li>Cash token once for 147 beneficiaries</li>
+            <li>Raw food give away twice and 295 people benefited</li>
+            <li>Number of epilepsy patients receiving medication: <strong>19</strong></li>
+        </ul>
+        <h3>Countries Serviced since 2006:</h3>
+        <ul class="impact-list">
+            <li>Bangui 2006, 2008, 2022</li>
+            <li>Cameroon</li>
+            <li>Congo Brazzaville 2022</li>
+            <li>Lome Togo 2021</li>
+            <li>Nigeria 2013, 2015</li>
+            <li>Kenya</li>
+            <li>Conakry Guinea</li>
+        </ul>
+        <h3>Global Mission Reach</h3>
+        <div id="mission-map"></div>
+    </section>
+
+    <!-- Ongoing Commitment -->
+    <section style="background-color: var(--light-bg);">
+        <h2 class="section-title">Ongoing Commitment</h2>
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <p>Epilepsy treatment is lifelong. Patients receive medication refills every three months, and supplies are carefully monitored from the United States to ensure continuity of care. Those who adhere to their treatment plans experience significant reductions in seizures and improved quality of life.</p>
+            <br>
+            <p>We remain grateful to God for His guidance and provision. We continue to pray for healing, hope, and the resources needed to serve even more communities in need.</p>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section id="cta">
+        <h2 class="section-title">Join Our Mission</h2>
+        <p style="text-align:center; max-width:800px; margin:0 auto;">Help us bring life-saving care to underserved communities. You can make a difference by donating, volunteering, or partnering with us.</p>
+        <div class="cta-buttons" style="margin-top:1.5rem;">
+            <a href="#" class="btn-donate">Donate</a>
+            <a href="#" class="btn-donate" style="background-color: var(--secondary-blue);">Volunteer</a>
+            <a href="#" class="btn-donate" style="background-color: var(--primary-blue);">Partner with Us</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="footer-content">
+            <!-- About Section -->
+            <div class="footer-section">
+                <h3>Heart of Gold Medical International</h3>
+                <p>A nonprofit organization dedicated to delivering compassionate medical care, health education, and essential supplies to underserved communities across Africa.</p>
+            
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="#">Home</a>
+                <a href="#about">About Us</a>
+                <a href="#focus">Medical Missions</a>
+                <a href="#impact">Our Impact</a>
+                <a href="#journey">Gallery</a>
+                <a href="#">Donate</a>
+            </div>
+
+            <!-- Get Involved -->
+            <div class="footer-section">
+                <h3>Get Involved</h3>
+                <a href="#">Volunteer</a>
+                <a href="#">Sponsor a Mission</a>
+                <a href="#">Donate Supplies</a>
+                <a href="#">Make a Donation</a>
+                <a href="#">Partner With Us</a>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <div class="contact-info">
+                    <p><strong>📍</strong> Upland, California<br>United States of America</p>
+                    <p><strong>📧</strong> <a href="mailto:info@heartofgoldmedical.org">info@heartofgoldmedical.org</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <p><strong>501(c)(3) Nonprofit · Tax-Deductible</strong></p>
+            <p>&copy; 2026 Heart of Gold Medical International. All rights reserved.</p>
+            <p><em>Bringing healthcare and hope to the world's most underserved communities.</em></p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('open');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateToggleIcon();
+        }
+
+        function updateToggleIcon() {
+            const theme = document.documentElement.getAttribute('data-theme') || 'light';
+            const toggle = document.getElementById('theme-toggle');
+            toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateToggleIcon();
+        });
+        let slideIndex = 0;
+        showSlides();
+        function showSlides() {
+            const slides = document.getElementsByClassName("slide");
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";  
+            }
+            slideIndex++;
+            if (slideIndex > slides.length) {slideIndex = 1}    
+            slides[slideIndex-1].style.display = "block";  
+            setTimeout(showSlides, 4000); // Change image every 5 seconds
+        }
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('mission-map').setView([4.5, 10], 3);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([5.8470, 7.4128]).addTo(map).bindPopup('Nigeria Missions');
+        L.marker([4.3947, 18.5582]).addTo(map).bindPopup('Central African Republic Missions');
+        L.marker([3.8480, 11.5021]).addTo(map).bindPopup('Cameroon Mission');
+        L.marker([6.1319, 1.2228]).addTo(map).bindPopup('Togo Mission');
+        L.marker([-1.2921, 36.8219]).addTo(map).bindPopup('Kenya Mission');
+        L.marker([9.6412, -13.5784]).addTo(map).bindPopup('Guinea Mission');
+        L.marker([-4.2634, 15.2429]).addTo(map).bindPopup('Congo Brazzaville Mission');
+    </script>
+    
+</body>
+</html>
